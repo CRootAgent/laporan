@@ -1,0 +1,77 @@
+\subsection{Metodologi Rekayasa Perangkat Lunak}
+Pengembangan sistem CRootAgent menerapkan metodologi rekayasa perangkat lunak iteratif yang berorientasi pada kualitas dan pengujian (\textit{test-driven approach}). Tahapan metodologi meliputi:
+\begin{enumerate}
+    \item \textbf{Analisis Kebutuhan:} Mengidentifikasi spesifikasi fungsional dan kriteria performa agen coding CLI.
+    \item \textbf{Perancangan Arsitektur:} Merancang pemisahan tanggung jawab antarmodul (\textit{Separation of Concerns}) menggunakan pola \textit{trait-based abstraction} khas Rust.
+    \item \textbf{Implementasi Fitur End-to-End:} Mengembangkan pustaka inti, antarmuka baris perintah, adaptor penyedia API, dan perkakas lokal.
+    \item \textbf{Verifikasi dan Pengujian:} Menyusun \textit{test suite} otomatis untuk uji unit dan integrasi, serta mengintegrasikannya ke pipeline CI/CD GitHub Actions.
+\end{enumerate}
+
+\subsection{Arsitektur Sistem CRootAgent}
+Arsitektur CRootAgent dirancang modular dan terdiri atas enam lapisan utama:
+
+\begin{enumerate}
+    \item \textbf{CLI Dispatcher (\texttt{cli.rs} \& \texttt{main.rs}):} Memanfaatkan pustaka \texttt{clap} untuk mem-parsing argumen terminal, flag global, serta subperintah (\texttt{run}, \texttt{chat}, \texttt{session}, \texttt{config}, dan \texttt{models}).
+    \item \textbf{Configuration Manager (\texttt{config.rs}):} Mengelola pembacaan dan penyimpanan konfigurasi pengguna dalam format TOML pada direktori konfigurasi standar (\texttt{\~{}/.config/crootagent/config.toml}), dengan prioritas penimpaan dinamis oleh \textit{environment variables}.
+    \item \textbf{Multi-Session Store (\texttt{session.rs}):} Menyimpan riwayat obrolan lengkap secara persisten dalam berkas JSON per sesi di \texttt{\~{}/.config/crootagent/sessions/}, mendukung pembuatan sesi baru, pemulihan sesi lama, dan ekspor ke dokumen Markdown.
+    \item \textbf{Provider Abstraction Layer (\texttt{provider/mod.rs}):} Mendefinisikan \textit{trait} \texttt{LlmProvider} yang diimplementasikan oleh modul konkrit untuk masing-masing penyedia:
+    \begin{itemize}
+        \item \texttt{openai.rs}: Menangani format protokol standar OpenAI yang kompatibel dengan OpenAI, Groq Cloud, dan Ollama lokal.
+        \item \texttt{anthropic.rs}: Menangani Messages API Anthropic dengan konversi blok \texttt{tool\_use} dan \texttt{tool\_result}.
+        \item \texttt{gemini.rs}: Menangani protokol Google Gemini \texttt{generateContent} dengan \texttt{functionDeclarations} dan \texttt{functionResponse}.
+    \end{itemize}
+    \item \textbf{Tool Execution Engine (\texttt{tools/mod.rs}):} Menyediakan registri perkakas (\texttt{ToolRegistry}) yang mengimplementasikan \textit{trait} \texttt{Tool}.
+    \item \textbf{Agent Execution Loop (\texttt{agent.rs}):} Mengorkestrasi siklus ReAct, memvalidasi apakah perkakas yang dipanggil berstatus destruktif, meminta konfirmasi HITL kepada pengguna, dan menyuntikkan hasil kembali ke konteks percakapan.
+\end{enumerate}
+
+\subsection{Spesifikasi Kebutuhan Sistem}
+Tabel \ref{tab:requirements} mendefinisikan kebutuhan fungsional (SKF) dan non-fungsional (SKNF) yang wajib dipenuhi oleh sistem.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Spesifikasi Kebutuhan Sistem CRootAgent}
+\label{tab:requirements}
+\begin{tabularx}{\textwidth}{l p{3.2cm} X}
+\toprule
+\textbf{Kode} & \textbf{Kebutuhan} & \textbf{Deskripsi} \\
+\midrule
+SKF-01 & Multi-Provider API & Mendukung integrasi ke Google Gemini, Anthropic Claude, OpenAI, Groq, dan Ollama lokal. \\
+SKF-02 & Mode Eksekusi Ganda & Menyediakan mode interaktif (REPL) dan mode eksekusi satu baris (\textit{one-shot}). \\
+SKF-03 & Manajemen Sesi Persisten & Mampu menyimpan, memuat, melihat daftar, menghapus, dan mengekspor sesi percakapan ke Markdown. \\
+SKF-04 & Operasi Berkas & Menyediakan perkakas \texttt{read\_file}, \texttt{write\_file}, dan \texttt{edit\_file} (surgical search \& replace). \\
+SKF-05 & Eksekusi Shell Lokal & Menyediakan perkakas \texttt{run\_command} dengan batas waktu (\textit{timeout}) dan penangkapan kode keluar. \\
+SKF-06 & Human-in-the-Loop & Meminta konfirmasi \texttt{[y/N]} sebelum menjalankan aksi destruktif, kecuali jika flag \texttt{-y} aktif. \\
+SKNF-01 & Efisiensi Memori & Penggunaan memori kerja (\textit{working set}) saat siaga tidak melebihi 20 MB RAM. \\
+SKNF-02 & Waktu Startup & Waktu inisialisasi aplikasi hingga siap menerima perintah di bawah 50 milidetik. \\
+SKNF-03 & Distribusi Multi-OS & Tersedia rilis biner mandiri otomatis untuk Linux x86\_64, macOS arm64/x86\_64, dan Windows x86\_64. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Perancangan Skema Data Sesi}
+Penyimpanan sesi menggunakan struktur JSON yang merekam riwayat percakapan secara menyeluruh. Struktur data utama dimodelkan dalam Rust sebagai berikut:
+
+\begin{verbatim}
+pub struct Session {
+    pub id: String,                    // UUID v4 unik
+    pub name: String,                  // Nama sesi yang dapat dibaca manusia
+    pub provider: String,              // Penyedia aktif (gemini, groq, dll.)
+    pub model: String,                 // Nama model yang digunakan
+    pub created_at: DateTime<Utc>,     // Waktu pembuatan
+    pub updated_at: DateTime<Utc>,     // Waktu pembaruan terakhir
+    pub messages: Vec<ChatMessage>,    // Riwayat pesan (user, assistant, tool)
+}
+\end{verbatim}
+
+Setiap pesan dalam riwayat menyimpan peran (\texttt{role}), isi teks, daftar pemanggilan perkakas (\texttt{tool\_calls}), pengenal pemanggilan (\texttt{tool\_call\_id}), serta atribusi model nyata yang memproses (\texttt{model\_attribution}). Model ini menjamin ketertelusuran penuh (\textit{provenance}) sesuai prinsip Explainable AI.
+
+\subsection{Perancangan Alur Otomatisasi CI/CD}
+Untuk memenuhi tuntutan profil Software Engineer pada Capstone Proyek 2, dibangun pipeline integrasi dan pengiriman berkesinambungan (\textit{Continuous Integration and Continuous Deployment} / CI/CD) menggunakan GitHub Actions pada berkas \texttt{.github/workflows/release.yml}. 
+
+Alur otomatisasi terdiri atas tiga tahap terintegrasi:
+\begin{enumerate}
+    \item \textbf{Tahap Pengujian (\texttt{test}):} Dijalankan pada \texttt{ubuntu-latest} untuk mengeksekusi \texttt{cargo check} dan seluruh rangkaian \texttt{cargo test}.
+    \item \textbf{Tahap Kompilasi Matriks Multi-OS (\texttt{build-and-release}):} Berjalan paralel pada empat lingkungan: \texttt{ubuntu-latest} (\texttt{x86\_64-unknown-linux-gnu}), \texttt{macos-latest} (\texttt{aarch64-apple-darwin}), \texttt{macos-13} (\texttt{x86\_64-apple-darwin}), dan \texttt{windows-latest} (\texttt{x86\_64-pc-windows-msvc}). Setiap biner dikemas ke format \texttt{.tar.gz} atau \texttt{.zip} dan dihitung hash SHA256-nya.
+    \item \textbf{Tahap Rilis Otomatis (\texttt{create-github-release}):} Mengumpulkan seluruh artefak dari keempat target, menentukan tag versi semantik secara otomatis (\textit{auto-tagging}), dan menerbitkan rilis resmi ke GitHub Releases.
+\end{enumerate}

@@ -1,0 +1,91 @@
+name: Compile LaTeX and Publish PDF Release
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-latex:
+    name: Compile LaTeX Document
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compile LaTeX to PDF
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: laporan.tex
+          args: -pdf -bibtex -file-line-error -interaction=nonstopmode
+
+      - name: Rename output artifact
+        run: |
+          cp laporan.pdf Laporan-Proyek-2-Ahmad-Zakky-Nurfauzan-714250028.pdf
+          ls -lh *.pdf
+
+      - name: Upload PDF Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Laporan-Proyek-2-PDF
+          path: Laporan-Proyek-2-Ahmad-Zakky-Nurfauzan-714250028.pdf
+
+  release-pdf:
+    name: Auto Tag and Publish PDF Release
+    needs: [build-latex]
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download compiled PDF
+        uses: actions/download-artifact@v4
+        with:
+          name: Laporan-Proyek-2-PDF
+          path: release-dist
+
+      - name: Determine Tag
+        id: tagger
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            TAG_NAME="${GITHUB_REF#refs/tags/}"
+          else
+            TAG_NAME="v1.0.0"
+            if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+              TAG_NAME="v1.0.${{ github.run_number }}"
+            fi
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git tag -a "$TAG_NAME" -m "Automated Release $TAG_NAME"
+            git push origin "$TAG_NAME" || true
+          fi
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tagger.outputs.tag_name }}
+          name: "Laporan Proyek 2 D4TI ULBI - ${{ steps.tagger.outputs.tag_name }}"
+          body: |
+            ## 📄 Laporan Proyek 2 Sarjana Terapan Teknik Informatika ULBI
+            
+            **Judul:** Rancang Bangun CRootAgent: Agen Kecerdasan Buatan Berbasis CLI Ultra-Ringan dengan Multi-API Session dan Orkestrasi Perkakas Pengembang Berbasis Rust  
+            **Penulis:** Ahmad Zakky Nurfauzan (NPM: 714250028)  
+            **Dosen Pembimbing:** Rolly Maulana Awangga, S.T., M.T., CAIP.  
+            
+            ### 📥 Unduh Dokumen Resmi
+            - Berkas PDF: `Laporan-Proyek-2-Ahmad-Zakky-Nurfauzan-714250028.pdf`
+          files: release-dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

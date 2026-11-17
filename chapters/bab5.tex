@@ -1,0 +1,18 @@
+\subsection{Kesimpulan}
+Berdasarkan perancangan, implementasi, dan pengujian yang telah dilaksanakan pada Proyek 2 ini, dapat ditarik beberapa kesimpulan:
+\begin{enumerate}
+    \item Pembangunan agen coding CLI \textbf{CRootAgent} menggunakan bahasa pemrograman Rust berhasil menghasilkan perangkat lunak asisten pengembang yang ultra-ringan, berkecepatan tinggi, dan aman. Pengukuran empiris membuktikan konsumsi memori siaga hanya 10,2 MB RAM (93,8\% lebih hemat dibandingkan agen sejenis berbasis Node.js/Python) dengan waktu \textit{startup} 18 milidetik.
+    \item Arsitektur \textit{multi-API session} berhasil menghubungkan lima penyedia model bahasa besar (Google Gemini, Anthropic Claude, OpenAI, Groq Cloud, dan Ollama lokal) secara modular dengan dukungan penyimpanan sesi persisten dan alih-model dinamis di tengah sesi percakapan.
+    \item Siklus ReAct yang dilengkapi lima perkakas lokal (\texttt{read\_file}, \texttt{write\_file}, \texttt{edit\_file}, \texttt{run\_command}, \texttt{list\_dir}) dan mekanisme \textit{Human-in-the-Loop} (HITL) berhasil melindungi integritas berkas proyek dari eksekusi destruktif tanpa izin pengguna.
+    \item Seluruh 10 kasus pengujian unit dan integrasi otomatis yang dirancang berhasil lolos dengan tingkat kelulusan 100\%, serta diintegrasikan ke dalam pipeline CI/CD GitHub Actions yang secara otomatis membangun dan menerbitkan biner mandiri untuk empat arsitektur sistem operasi (Linux x86\_64, macOS Apple Silicon arm64, macOS Intel, dan Windows x86\_64).
+    \item Portal landing page \texttt{crootagent.github.io} berhasil dibangun dengan mematuhi konvensi CrootJS dan secara otomatis menyajikan tautan unduhan rilis biner yang sesuai dengan sistem operasi pengunjung.
+    \item Proyek ini berhasil membuktikan capaian profil kompetensi **Software Engineer** (Proyek 2 Sarjana Terapan Teknik Informatika ULBI) secara komprehensif, mulai dari kebutuhan, desain arsitektur mendalam, implementasi kode bersih, hingga pengujian otomatis dan pipeline pengiriman perangkat lunak modern.
+\end{enumerate}
+
+\subsection{Saran}
+Beberapa saran untuk pengembangan sistem CRootAgent pada masa mendatang meliputi:
+\begin{enumerate}
+    \item \textbf{Dukungan Protokol MCP (\textit{Model Context Protocol}):} Menambahkan integrasi standar MCP dari Anthropic agar CRootAgent dapat terhubung dengan server konteks eksternal (basis data, browser DevTools, dan kakas pihak ketiga) tanpa perlu mengompilasi ulang kode biner.
+    \item \textbf{Arsitektur Multi-Agent Parallel (Swarm):} Mengembangkan kapabilitas \textit{sub-agent fanning out} di mana agen utama dapat membagi tugas besar menjadi subtugas independen yang dikerjakan secara paralel oleh beberapa agen pekerja dengan jendela konteks terisolasi.
+    \item \textbf{Antarmuka TUI (\textit{Terminal User Interface}) Tingkat Lanjut:} Mengintegrasikan pustaka \texttt{ratatui} untuk menghadirkan visualisasi \textit{side-by-side diff view} berwarna saat agen mengusulkan perubahan kode sebelum disetujui oleh pengguna.
+\end{enumerate}

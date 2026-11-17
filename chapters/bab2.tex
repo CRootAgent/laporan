@@ -1,0 +1,51 @@
+\subsection{Arsitektur Agen Cerdas dan Pola ReAct}
+Sistem agen cerdas berbasis model bahasa besar tidak sekadar berperan sebagai model generasi teks pasif, melainkan bertindak sebagai pengambil keputusan yang mampu berinteraksi dengan lingkungannya. Pola arsitektur \textbf{ReAct} (\textit{Reasoning and Acting}) yang diperkenalkan oleh \cite{yao2023react} menggabungkan jejak penalaran verbal (\textit{reasoning traces}) dengan tindakan konkret (\textit{actions}). 
+
+Dalam siklus ReAct, agen menerima masukan dari pengguna dan menjalankan tahapan berulang:
+\begin{enumerate}
+    \item \textbf{Reason (Pemikiran):} Model mengevaluasi kondisi konteks percakapan saat ini dan merumuskan sub-tujuan logis.
+    \item \textbf{Act (Tindakan):} Model menerbitkan pemanggilan fungsi (\textit{tool calling}) dengan menyertakan nama perkakas dan argumen terstruktur dalam format JSON.
+    \item \textbf{Observe (Pengamatan):} Lingkungan eksekusi lokal menjalankan perkakas tersebut dan mengembalikan hasilnya (\textit{observation}) ke dalam konteks pesan model.
+\end{enumerate}
+Pendekatan ini terbukti mengurangi halusinasi secara drastis serta memungkinkan model menyelesaikan tugas rekayasa perangkat lunak multi-langkah seperti pencarian berkas, perbaikan bug, dan kompilasi \cite{schick2023toolformer}.
+
+\subsection{Kajian Komparatif Kakas Agen CLI Pengembang}
+Tabel \ref{tab:sota} menyajikan perbandingan antara beberapa kakas agen coding CLI terkemuka di industri perangkat lunak dengan CRootAgent yang dikembangkan pada proyek ini.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Perbandingan State-of-the-Art Kakas Agen Coding CLI}
+\label{tab:sota}
+\begin{tabularx}{\textwidth}{l p{2.8cm} p{2.2cm} p{2.2cm} X}
+\toprule
+\textbf{Kakas Agen} & \textbf{Bahasa / Runtime} & \textbf{Multi-API Provider} & \textbf{Jejak Memori (RAM Idle)} & \textbf{Karakteristik Utama} \\
+\midrule
+Claude Code & Node.js / TypeScript & Tunggal (Anthropic) & $\sim$160 MB & Kuat pada integrasi Claude, distribusi via npm. \\
+OpenAI Codex CLI & Python / Node.js & Tunggal (OpenAI) & $\sim$180 MB & Berfokus pada model OpenAI, ketergantungan runtime. \\
+Google Antigravity & Node.js / Go Wrapper & Multi-Provider & $\sim$140 MB & Ekosistem ekstensi luas, beban startup terpengaruh Node. \\
+AWS Kiro & TypeScript & Multi-Provider & $\sim$150 MB & Steering file fleksibel, instalasi via npm. \\
+\textbf{CRootAgent} & \textbf{Rust (Native)} & \textbf{Multi-Provider} & \textbf{10,2 MB} & \textbf{Binary mandiri, zero runtime dependency, multi-API session, HITL safety.} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Karakteristik Bahasa Pemrograman Sistem Rust}
+Rust dipilih sebagai fondasi pengembangan CRootAgent karena keunggulan intrinsiknya dalam rekayasa perangkat lunak sistem:
+\begin{enumerate}
+    \item \textbf{Keamanan Memori Tanpa Garbage Collector:} Rust menerapkan sistem kepemilikan (\textit{ownership}) dan peminjaman (\textit{borrow checker}) yang memvalidasi integritas memori pada saat kompilasi. Karakteristik ini mengeliminasi celah kerentanan seperti \textit{dangling pointer}, \textit{double free}, dan \textit{data race} tanpa membebankan penalti jeda \textit{garbage collector} \cite{levy2020rust}.
+    \item \textbf{Jejak Memori Ringkas dan Efisiensi Daya:} Penelitian empiris oleh \cite{pereira2021energy} menunjukkan bahwa biner hasil kompilasi Rust menempati peringkat teratas dalam efisiensi energi dan kecepatan eksekusi, mendekati performa bahasa C/C++ namun dengan jaminan keamanan memori penuh.
+    \item \textbf{Ekosistem Asinkronus Modern:} Pustaka \texttt{tokio} dan \texttt{reqwest} pada Rust menyediakan mesin runtime I/O asinkronus berbasis \textit{epoll/kqueue} yang mampu menangani ratusan koneksi jaringan dengan konsumsi memori minimal.
+\end{enumerate}
+
+\subsection{Prinsip Human-in-the-Loop (HITL) dan Explainable AI (xAI)}
+Dalam sistem AI agentic, pendelegasian wewenang penuh kepada model untuk mengeksekusi perintah sistem operasi tanpa pengawasan manusia membawa risiko keselamatan fatal (\textit{destructive actions}), seperti penghapusan berkas proyek secara tidak disengaja atau eksekusi perintah terminal yang berbahaya \cite{amershi2019human}. 
+
+Prinsip keselamatan yang diimplementasikan pada CRootAgent mengadopsi standar sistem agentic terapan:
+\begin{itemize}
+    \item \textbf{Human-in-the-Loop (HITL):} AI hanya bertindak sebagai pengusul tindakan (\textit{recommender}), sementara keputusan eksekusi berada di tangan manusia. Setiap perkakas yang berstatus destruktif (\texttt{write\_file}, \texttt{edit\_file}, dan \texttt{run\_command}) wajib memicu dialog konfirmasi interaktif \texttt{[y/N]} sebelum dieksekusi, kecuali bila pengguna secara sadar mengaktifkan flag bypass (\texttt{-y} / \texttt{--yes}).
+    \item \textbf{Explainable AI (xAI) dan Provenance:} Setiap respon yang dihasilkan menyertakan atribusi model nyata yang memproses (\textit{provider} dan nama model asli), serta mencetak argumen dan keluaran perkakas secara transparan pada antarmuka terminal.
+\end{itemize}
+
+\subsection{Konvensi CrootJS untuk Antarmuka Web}
+Untuk mendistribusikan berkas biner CRootAgent kepada pengguna, dibangun landing page web menggunakan konvensi **CrootJS** (\url{https://croot.js.org/docs/conventions}). Konvensi ini mewajibkan pemisahan berkas HTML, CSS, dan JavaScript secara independen, memuat modul langsung melalui CDN tanpa \textit{bundler} (\texttt{webpack}, \texttt{vite}), serta mengimpor modul fungsional kecil seperti \texttt{api.js} untuk panggilan asinkronus dan \texttt{useragent.js} untuk deteksi platform. Pendekatan ini selaras dengan prinsip kesederhanaan dan keandalan sistem.

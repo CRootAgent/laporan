@@ -1,0 +1,60 @@
+\subsection{Latar Belakang}
+Pemanfaatan kecerdasan buatan berbasis model bahasa besar (\textit{Large Language Model} / LLM) telah mengalami pergeseran paradigma dari antarmuka obrolan berbasis web menuju agen cerdas (\textit{agentic AI}) yang beroperasi langsung di lingkungan kerja lokal pengembang perangkat lunak. Kakas seperti Claude Code dari Anthropic, OpenAI Codex CLI, Google Antigravity CLI, dan AWS Kiro membuktikan bahwa agen yang mampu membaca berkas, menulis kode, memverifikasi galat sintaks, dan mengeksekusi perintah terminal mampu meningkatkan produktivitas rekayasa perangkat lunak secara signifikan \cite{hou2024llm4se}.
+
+Meskipun demikian, sebagian besar kakas agen yang beredar saat ini dibangun di atas lingkungan terinterpretasi seperti Node.js atau Python. Ketergantungan tersebut menimbulkan dua kendala teknis utama:
+\begin{enumerate}
+    \item \textbf{Konsumsi Memori dan Beban Runtime Tinggi:} Lingkungan Node.js dan Python memerlukan \textit{runtime engine} (V8 atau Python VM) yang menyerap memori dasar sebesar 150--300 MB RAM hanya untuk proses \textit{idle}, dengan waktu \textit{startup} berkisar 200--600 milidetik. Pada perangkat dengan spesifikasi terbatas atau ketika pengembang menjalankan puluhan kontainer dan proses kompilasi secara simultan, beban memori ini menjadi penghambat kinerja yang nyata \cite{pereira2021energy}.
+    \item \textbf{Kerumitan Distribusi Multi-OS:} Distribusi aplikasi agen berbasis Node.js/Python menuntut pengguna menginstal paket pengelola (\texttt{npm}, \texttt{pip}), menangani konflik versi pustaka, atau mengunduh bundel biner besar (> 80 MB) yang membungkus seluruh runtime.
+\end{enumerate}
+
+Bahasa pemrograman sistem **Rust** menawarkan solusi ideal terhadap kedua kendala di atas. Rust mengompilasi kode sumber langsung menjadi instruksi mesin asli (\textit{native machine code}) tanpa \textit{garbage collector} atau \textit{virtual machine}, menjamin keamanan memori waktu-kompilasi (\textit{compile-time memory safety}), dan menghasilkan biner mandiri yang sangat ringkas dengan konsumsi memori hanya berkisar 8--15 MB RAM \cite{levy2020rust}.
+
+Selain efisiensi performa, integrasi multi-penyedia kecerdasan buatan (\textit{multi-API provider}) menjadi kebutuhan penting. Pengembang kerap perlu beralih antara Google Gemini (yang menawarkan jendela konteks gratis hingga 1 juta token), Groq Cloud (dengan latensi pemrosesan Llama 3.3 yang sangat tinggi), OpenAI, Anthropic Claude, hingga Ollama lokal untuk pekerjaan tanpa koneksi internet.
+
+Berdasarkan latar belakang tersebut, pada Proyek 2 Program Studi Sarjana Terapan Teknik Informatika Universitas Logistik dan Bisnis Internasional (ULBI), dirancang dan dibangun sistem agen cerdas berbasis CLI bernama \textbf{CRootAgent}. Proyek ini sekaligus menjadi pembuktian capaian profil kompetensi **Software Engineer** (Proyek 2), di mana mahasiswa dituntut membangun fitur lengkap \textit{end-to-end} mulai dari analisis kebutuhan, perancangan arsitektur, implementasi kode sumber yang modular, hingga pengujian otomatis yang terintegrasi pada pipeline CI/CD.
+
+\subsection{Rumusan Masalah}
+Berdasarkan latar belakang di atas, rumusan masalah dalam Proyek 2 ini adalah:
+\begin{enumerate}
+    \item Bagaimana merancang dan mengimplementasikan agen pengembang CLI yang ultra-ringan dan berkinerja tinggi menggunakan bahasa pemrograman Rust?
+    \item Bagaimana membangun arsitektur \textit{multi-API session} yang mampu menghubungkan berbagai penyedia LLM (OpenAI, Anthropic Claude, Google Gemini, Groq, dan Ollama) dengan manajemen sesi yang persisten?
+    \item Bagaimana mengimplementasikan siklus ReAct yang dilengkapi mekanisme keselamatan \textit{Human-in-the-Loop} (HITL) saat mengeksekusi perkakas lokal?
+    \item Bagaimana merancang pipeline otomatisasi CI/CD di GitHub Actions untuk pengujian kode dan rilis kompilasi multi-OS (Linux, macOS, dan Windows) secara mandiri?
+    \item Bagaimana membangun portal web \textit{landing page} yang mematuhi konvensi CrootJS untuk mendeteksi rilis biner terbaru secara otomatis?
+\end{enumerate}
+
+\subsection{Tujuan Proyek}
+Tujuan yang hendak dicapai melalui pelaksanaan Proyek 2 ini adalah:
+\begin{enumerate}
+    \item Mengembangkan aplikasi biner mandiri \textbf{CRootAgent} menggunakan Rust dengan konsumsi memori di bawah 20 MB dan waktu \textit{startup} di bawah 50 milidetik.
+    \item Mengimplementasikan modul perutean \textit{multi-API} yang modular dan mendukung alih penyedia/model secara dinamis.
+    \item Menyediakan modul perkakas pengembang lokal (\texttt{read\_file}, \texttt{write\_file}, \texttt{edit\_file}, \texttt{run\_command}, dan \texttt{list\_dir}) yang aman dan transparan.
+    \item Membangun alur CI/CD otomatis di GitHub Actions yang melakukan pengujian unit/integrasi, pemberian tag versi otomatis (\textit{auto-tagging}), serta pembuatan rilis biner multi-OS.
+    \item Membangun portal web \texttt{crootagent.github.io} menggunakan CrootJS tanpa dependensi berat untuk memfasilitasi distribusi perangkat lunak.
+\end{enumerate}
+
+\subsection{Batasan Masalah}
+Batasan masalah dalam pelaksanaan Proyek 2 ini meliputi:
+\begin{enumerate}
+    \item Antarmuka pengguna berfokus pada baris perintah (\textit{Command Line Interface} / CLI) dan terminal interaktif (REPL), tidak mencakup antarmuka grafis desktop (GUI).
+    \item Penyedia LLM yang didukung secara resmi meliputi Google Gemini, Anthropic Claude, OpenAI, Groq Cloud, dan Ollama lokal.
+    \item Pengujian otomatis difokuskan pada uji unit konfigurasi, manajemen sesi, dan integritas eksekusi perkakas lokal.
+    \item Target sistem operasi pada pipeline rilis otomatis dibatasi pada Linux x86\_64, macOS Apple Silicon (arm64), macOS Intel (x86\_64), dan Windows x86\_64.
+\end{enumerate}
+
+\subsection{Manfaat Proyek}
+Manfaat dari pengembangan proyek ini mencakup:
+\begin{enumerate}
+    \item \textbf{Bagi Pengembang Perangkat Lunak:} Menyediakan kakas asisten pengembang yang sangat cepat, hemat daya baterai dan memori, serta bebas digunakan dengan berbagai kunci API pilihan sendiri.
+    \item \textbf{Bagi Institusi (ULBI):} Menghasilkan produk perangkat lunak bernilai guna tinggi yang menjadi bukti nyata kompetensi rekayasa perangkat lunak vokasi tingkat Sarjana Terapan.
+    \item \textbf{Bagi Mahasiswa:} Mengasah penguasaan bahasa pemrograman sistem Rust, perancangan arsitektur \textit{agentic AI}, manajemen SCM GitHub, dan otomatisasi CI/CD modern.
+\end{enumerate}
+
+\subsection{Profil Kompetensi Capstone Proyek 2}
+Sesuai dengan ketentuan petunjuk proyek capstone bertahap di lingkungan pendidikan vokasi \cite{awangga2024agentic}, Proyek 2 menuntut pembuktian profil **Software Engineer**:
+\begin{itemize}
+    \item Membangun fitur lengkap \textit{end-to-end}: analisis kebutuhan $\rightarrow$ desain sistem $\rightarrow$ implementasi $\rightarrow$ integrasi.
+    \item Pengujian yang ditulis sendiri oleh mahasiswa: uji unit dan integrasi dengan verifikasi mekanis nyata.
+    \item Pipeline CI/CD yang secara otomatis menjalankan \textit{test suite} setiap kali terjadi perubahan kode sumber.
+\end{itemize}
+Seluruh poin kompetensi tersebut dibuktikan dan dilaporkan secara transparan pada dokumen ini.

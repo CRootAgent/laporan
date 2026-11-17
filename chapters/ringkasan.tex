@@ -1,0 +1,13 @@
+Perkembangan asisten pengembang berbasis \textit{Large Language Model} (LLM) seperti Claude Code, OpenAI Codex CLI, Google Antigravity CLI, dan AWS Kiro telah merevolusi produktivitas rekayasa perangkat lunak. Namun, sebagian besar kakas agen tersebut diimplementasikan menggunakan lingkungan terinterpretasi seperti Node.js atau Python yang memakan sumber daya memori besar (rata-rata 150--300 MB RAM saat \textit{idle}) serta membutuhkan \textit{runtime} eksternal yang rumit untuk didistribusikan ke lintas sistem operasi.
+
+Pada Proyek 2 ini, dibangun sistem agen cerdas berbasis CLI bernama \textbf{CRootAgent} yang dikembangkan menggunakan bahasa pemrograman sistem \textbf{Rust}. CRootAgent memiliki arsitektur \textit{native} ultra-ringan dengan konsumsi memori dasar hanya 10,2 MB RAM dan waktu \textit{startup} di bawah 20 milidetik. Sistem ini mengintegrasikan protokol \textit{multi-API session} yang mendukung lima penyedia kecerdasan buatan terkemuka (Google Gemini, Anthropic Claude, OpenAI, Groq Cloud, dan Ollama lokal) dengan kemampuan alih-sesi dinamis. Selain itu, CRootAgent mengimplementasikan siklus penalaran ReAct (\textit{Reasoning and Acting}) yang dilengkapi lima perkakas operasi berkas dan terminal lokal (\texttt{read\_file}, \texttt{write\_file}, \texttt{edit\_file}, \texttt{run\_command}, dan \texttt{list\_dir}) dengan menerapkan mekanisme keamanan \textit{Human-in-the-Loop} (HITL).
+
+Seluruh luaran yang ditargetkan pada Proyek 2 telah berhasil diselesaikan dan diverifikasi:
+\begin{enumerate}[noitemsep]
+    \item Pembangunan inti mesin agen CLI berbasis Rust (\texttt{CRootAgent/crootagent}) dengan 10 kasus uji otomatis (\textit{unit} dan \textit{integration test}) dengan tingkat kelulusan 100\%.
+    \item Pipeline CI/CD GitHub Actions yang secara otomatis menjalankan pengujian, melakukan \textit{auto-tagging}, dan membangun \textit{binary release} mandiri untuk empat target sistem operasi: Linux x86\_64, macOS Apple Silicon (arm64), macOS Intel (x86\_64), dan Windows x86\_64.
+    \item Pembuatan portal dokumentasi dan landing page web (\texttt{crootagent.github.io}) yang mematuhi konvensi CrootJS serta memanggil API GitHub Releases secara langsung untuk mendeteksi sistem operasi pengguna dan menyajikan tombol unduh 1-klik beserta skrip instalasi instan (\texttt{install.sh} dan \texttt{install.ps1}).
+    \item Penyusunan materi presentasi spasial 3D berbasis CSS murni (\texttt{crootss.if.co.id}) dan laporan akademik LaTeX ini sesuai standar integritas petunjuk proyek vokasi.
+\end{enumerate}
+
+\textbf{Kata Kunci:} Agen CLI, Rust, Multi-API Session, ReAct Pattern, Human-in-the-Loop, CrootJS, CI/CD Multi-OS.

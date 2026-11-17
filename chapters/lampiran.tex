@@ -1,0 +1,68 @@
+\subsection*{Lampiran 1: Tautan Repositori Proyek dan Rilis Biner}
+\addcontentsline{toc}{subsection}{Lampiran 1: Tautan Repositori Proyek dan Rilis Biner}
+
+Seluruh kode sumber, artefak rilis biner, portal dokumentasi web, dan presentasi pada Proyek 2 ini dapat diakses secara publik pada repositori resmi:
+\begin{enumerate}
+    \item \textbf{Repositori Inti CRootAgent (Rust CLI):} \\
+    \url{https://github.com/CRootAgent/crootagent}
+    \item \textbf{Halaman Rilis GitHub Resmi (Biner Multi-OS):} \\
+    \url{https://github.com/CRootAgent/crootagent/releases/latest}
+    \item \textbf{Portal Landing Page \& Dokumentasi Web (CrootJS):} \\
+    \url{https://crootagent.github.io}
+    \item \textbf{Repositori Laporan LaTeX:} \\
+    \url{https://github.com/CRootAgent/laporan}
+    \item \textbf{Materi Presentasi 3D (crootss):} \\
+    \url{https://github.com/CRootAgent/presentasi}
+\end{enumerate}
+
+\vspace{0.8cm}
+\subsection*{Lampiran 2: Log Eksekusi Rangkaian Uji Unit dan Integrasi Otomatis}
+\addcontentsline{toc}{subsection}{Lampiran 2: Log Eksekusi Rangkaian Uji Unit dan Integrasi Otomatis}
+
+Cuplikan keluaran terminal pada saat menjalankan pengujian \texttt{cargo test}:
+\begin{verbatim}
+$ cargo test --verbose
+   Compiling crootagent v0.1.0 (/Users/zakky/.../crootagent)
+    Finished `test` profile [unoptimized + debuginfo] in 34.27s
+
+Running tests/test_config.rs
+running 3 tests
+test test_default_config ... ok
+test test_config_toml_roundtrip ... ok
+test test_config_set_value ... ok
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; finished in 0.00s
+
+Running tests/test_session.rs
+running 2 tests
+test test_chat_message_creation ... ok
+test test_session_serialization ... ok
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; finished in 0.00s
+
+Running tests/test_tools.rs
+running 5 tests
+test test_tool_registry ... ok
+test test_write_and_read_file ... ok
+test test_list_dir ... ok
+test test_edit_file ... ok
+test test_run_command ... ok
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; finished in 0.02s
+
+Doc-tests crootagent
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; finished in 0.00s
+\end{verbatim}
+
+\vspace{0.8cm}
+\subsection*{Lampiran 3: Skrip Instalasi Otomatis Multi-Platform}
+\addcontentsline{toc}{subsection}{Lampiran 3: Skrip Instalasi Otomatis Multi-Platform}
+
+Perintah instalasi instan untuk pengguna akhir:
+\begin{itemize}
+    \item \textbf{macOS dan Linux (Bash):}
+    \begin{verbatim}
+    curl -fsSL https://crootagent.github.io/install.sh | bash
+    \end{verbatim}
+    \item \textbf{Windows (PowerShell):}
+    \begin{verbatim}
+    irm https://crootagent.github.io/install.ps1 | iex
+    \end{verbatim}
+\end{itemize}
