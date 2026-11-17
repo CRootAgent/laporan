@@ -72,6 +72,6 @@ Untuk memenuhi tuntutan profil Software Engineer pada Capstone Proyek 2, dibangu
 Alur otomatisasi terdiri atas tiga tahap terintegrasi:
 \begin{enumerate}
     \item \textbf{Tahap Pengujian (\texttt{test}):} Dijalankan pada \texttt{ubuntu-latest} untuk mengeksekusi \texttt{cargo check} dan seluruh rangkaian \texttt{cargo test}.
-    \item \textbf{Tahap Kompilasi Matriks Multi-OS (\texttt{build-and-release}):} Berjalan paralel pada empat lingkungan: \texttt{ubuntu-latest} (\texttt{x86\_64-unknown-linux-gnu}), \texttt{macos-latest} (\texttt{aarch64-apple-darwin}), \texttt{macos-13} (\texttt{x86\_64-apple-darwin}), dan \texttt{windows-latest} (\texttt{x86\_64-pc-windows-msvc}). Setiap biner dikemas ke format \texttt{.tar.gz} atau \texttt{.zip} dan dihitung hash SHA256-nya.
+    \item \textbf{Tahap Kompilasi Matriks Multi-OS (\texttt{build-and-release}):} Berjalan paralel pada empat target: \texttt{ubuntu-latest} (\texttt{x86\_64-unknown-linux-gnu}), \texttt{macos-latest} (\texttt{aarch64-apple-darwin}), \texttt{macos-latest} (\texttt{x86\_64-apple-darwin}), dan \texttt{windows-latest} (\texttt{x86\_64-pc-windows-msvc}). Setiap biner dikemas ke format \texttt{.tar.gz} atau \texttt{.zip} dan dihitung hash SHA256-nya.
     \item \textbf{Tahap Rilis Otomatis (\texttt{create-github-release}):} Mengumpulkan seluruh artefak dari keempat target, menentukan tag versi semantik secara otomatis (\textit{auto-tagging}), dan menerbitkan rilis resmi ke GitHub Releases.
 \end{enumerate}
